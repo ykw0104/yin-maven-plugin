@@ -7,13 +7,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * 对环境变量的读取
@@ -41,7 +49,23 @@ public class PrintenvMojo extends AbstractMojo {
 		Path workPath  = Paths.get(target,"work"+work);
 		BufferedWriter writer = null;
 		try {
-			Files.createDirectory(workPath);
+			workPath = Files.createDirectory(workPath);
+			//解析pom
+			Path pom = Paths.get(workPath.getParent().getParent().toAbsolutePath().toString(),"pom.xml");
+			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			Document pomDoc = builder.parse(pom.toFile());
+			//,获取param的key值
+			List<String> nodeValue = new ArrayList<String>();
+			NodeList paramNodeList = pomDoc.getElementsByTagName("param");
+			for(int i=0;i<paramNodeList.getLength();i++){
+				String value = paramNodeList.item(i).getFirstChild().getNodeValue();
+				getLog().info(value);
+				nodeValue.add(value);
+			}
+			Node envNode = pomDoc.getElementsByTagName("groupId").item(0);
+			NodeList nodeList = envNode.getChildNodes();
+			getLog().info(nodeList.getLength()+"");
+			
 			if(envArray != null && envArray.length != 0){
 				Path writeFile = Files.createFile(Paths.get(workPath.toString(),"env.txt"));
 				 writer = Files.newBufferedWriter(writeFile, Charset.forName("utf-8"));
@@ -53,7 +77,7 @@ public class PrintenvMojo extends AbstractMojo {
 						writer.newLine();
 					}
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}finally{
 			if(writer!=null){
