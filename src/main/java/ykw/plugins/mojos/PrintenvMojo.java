@@ -24,7 +24,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * 对环境变量的读取
+ * 对环境变量的读取并存入env.txt文件中
  * 在pom中设置
  * <envArray>
 		<param>${basedir}</param>
@@ -54,17 +54,15 @@ public class PrintenvMojo extends AbstractMojo {
 			Path pom = Paths.get(workPath.getParent().getParent().toAbsolutePath().toString(),"pom.xml");
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			Document pomDoc = builder.parse(pom.toFile());
-			//,获取param的key值
+			//,获取param的key值,存入nodeValue
 			List<String> nodeValue = new ArrayList<String>();
-			NodeList paramNodeList = pomDoc.getElementsByTagName("param");
+			NodeList envNodeList  = pomDoc.getElementsByTagName("envArray");
+			NodeList paramNodeList = envNodeList.item(0).getChildNodes();
 			for(int i=0;i<paramNodeList.getLength();i++){
-				String value = paramNodeList.item(i).getFirstChild().getNodeValue();
-				getLog().info(value);
-				nodeValue.add(value);
+				if(paramNodeList.item(i).getNodeType()==Node.ELEMENT_NODE){
+					nodeValue.add(paramNodeList.item(i).getTextContent());
+				}
 			}
-			Node envNode = pomDoc.getElementsByTagName("groupId").item(0);
-			NodeList nodeList = envNode.getChildNodes();
-			getLog().info(nodeList.getLength()+"");
 			
 			if(envArray != null && envArray.length != 0){
 				Path writeFile = Files.createFile(Paths.get(workPath.toString(),"env.txt"));
@@ -72,7 +70,7 @@ public class PrintenvMojo extends AbstractMojo {
 				 //显示参数并存入参数
 				for(int i=0;i<envArray.length;i++){
 						getLog().info(envArray[i]);
-						String str = envArray[i];
+						String str =nodeValue.get(i)+"="+ envArray[i];
 						writer.write(str, 0, str.length());
 						writer.newLine();
 					}
