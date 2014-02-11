@@ -44,6 +44,7 @@
 		-->
 	</dependencies>
 
+	
 	<build>
 		<plugins>
 			<plugin>
@@ -53,6 +54,7 @@
 				<configuration>
 					<goalPrefix>yin</goalPrefix>
 					<skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
+					<outputDirectory>${project.build.directory}</outputDirectory>
 				</configuration>
 			</plugin>
 		</plugins>
